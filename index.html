@@ -1,11 +1,1323 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I DEASTAMP</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaTalk — แชทและโทรได้ทันที</title>
+<style>
+  :root {
+    --bg: #0f0f13; --bg2: #17171e; --bg3: #1e1e28; --bg4: #252533;
+    --accent: #7c6fcd; --accent2: #9d93e0; --accent-dim: rgba(124,111,205,0.15);
+    --text: #e8e6f0; --text2: #9b99aa; --text3: #5c5a6a;
+    --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
+    --green: #3ecf8e; --red: #f44; --yellow: #f5a623; --blue: #4a9eff;
+    --r: 10px; --r2: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+
+  /* ── AUTH ── */
+  #auth-screen { display: flex; align-items: center; justify-content: center; height: 100vh;
+    background: radial-gradient(ellipse at 30% 40%, rgba(124,111,205,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(62,207,142,0.08) 0%, transparent 50%), var(--bg); }
+  .auth-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r2);
+    padding: 2.5rem; width: 390px; box-shadow: 0 32px 80px rgba(0,0,0,0.5); }
+  .auth-logo { font-size: 1.6rem; font-weight: 700; color: var(--accent2); margin-bottom: 0.3rem; letter-spacing: -0.5px; }
+  .auth-sub { color: var(--text2); font-size: 0.85rem; margin-bottom: 2rem; }
+  .auth-tabs { display: flex; margin-bottom: 1.8rem; border-bottom: 1px solid var(--border); }
+  .auth-tab { flex: 1; padding: 0.6rem; text-align: center; cursor: pointer; color: var(--text2);
+    font-size: 0.9rem; transition: all 0.2s; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .auth-tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; font-size: 0.78rem; color: var(--text2); margin-bottom: 0.4rem;
+    letter-spacing: 0.5px; text-transform: uppercase; }
+  .form-group input, .form-group textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: var(--r); padding: 0.7rem 1rem; color: var(--text); font-size: 0.9rem; outline: none;
+    transition: border 0.2s; font-family: inherit; }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+  .btn-primary { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: var(--r);
+    padding: 0.8rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .auth-error { color: var(--red); font-size: 0.82rem; margin-top: 0.5rem; text-align: center; min-height: 1.2em; }
+  .avatar-pick { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 0.5rem; }
+  .avatar-pick span { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 1.2rem; cursor: pointer; border: 2px solid transparent; transition: border 0.15s; }
+  .avatar-pick span.selected { border-color: var(--accent2); }
+
+  /* ── MAIN APP ── */
+  #app { display: none; height: 100vh; flex-direction: column; }
+  #app.visible { display: flex; }
+  .topbar { display: flex; align-items: center; padding: 0 1.2rem; height: 54px; background: var(--bg2);
+    border-bottom: 1px solid var(--border); gap: 1rem; flex-shrink: 0; }
+  .topbar-logo { font-weight: 700; color: var(--accent2); font-size: 1.1rem; letter-spacing: -0.3px; }
+  .topbar-search { flex: 1; max-width: 280px; position: relative; }
+  .topbar-search input { width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 20px; padding: 0.45rem 1rem 0.45rem 2.2rem; color: var(--text); font-size: 0.85rem; outline: none; }
+  .topbar-search::before { content: '🔍'; position: absolute; left: 0.7rem; top: 50%; transform: translateY(-50%); font-size: 0.75rem; }
+  .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 0.6rem; }
+  .icon-btn { background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 8px;
+    color: var(--text2); font-size: 1.1rem; transition: all 0.2s; }
+  .icon-btn:hover { background: var(--bg3); color: var(--text); }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 1.1rem; cursor: pointer; border: 2px solid var(--border2); transition: border 0.2s; }
+  .user-avatar:hover { border-color: var(--accent); }
+
+  /* Sidebar */
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 260px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-sec { padding: 1rem 1rem 0.5rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text3); display: flex; align-items: center; justify-content: space-between; }
+  .sidebar-sec button { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 1.1rem; transition: color 0.2s; }
+  .sidebar-sec button:hover { color: var(--accent2); }
+  .room-list { overflow-y: auto; padding-bottom: 0.5rem; }
+  .room-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 1rem; cursor: pointer;
+    transition: background 0.15s; position: relative; }
+  .room-item:hover { background: var(--bg3); }
+  .room-item.active { background: var(--accent-dim); }
+  .room-item.active .room-name { color: var(--accent2); }
+  .room-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+  .room-info { flex: 1; min-width: 0; }
+  .room-name { font-size: 0.88rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .room-last { font-size: 0.75rem; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .room-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .room-time { font-size: 0.7rem; color: var(--text3); }
+  .unread-badge { background: var(--accent); color: #fff; border-radius: 10px; font-size: 0.65rem;
+    padding: 1px 6px; min-width: 18px; text-align: center; }
+
+  /* Chat area */
+  .chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .chat-header { display: flex; align-items: center; padding: 0 1.2rem; height: 54px; background: var(--bg2);
+    border-bottom: 1px solid var(--border); gap: 0.75rem; flex-shrink: 0; }
+  .chat-header-info { flex: 1; }
+  .chat-header-name { font-weight: 600; font-size: 0.95rem; }
+  .chat-header-sub { font-size: 0.75rem; color: var(--text2); }
+  .chat-header-actions { display: flex; gap: 0.4rem; }
+  .call-btn { display: flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; border-radius: 8px;
+    border: 1px solid var(--border2); background: none; color: var(--text); cursor: pointer; font-size: 0.82rem; transition: all 0.2s; }
+  .call-btn:hover { background: var(--bg3); }
+  .call-btn.video:hover { background: rgba(74,158,255,0.15); border-color: var(--blue); color: var(--blue); }
+  .call-btn.voice:hover { background: rgba(62,207,142,0.15); border-color: var(--green); color: var(--green); }
+
+  /* Messages */
+  .messages { flex: 1; overflow-y: auto; padding: 1.2rem; display: flex; flex-direction: column;
+    gap: 0.2rem; scroll-behavior: smooth; }
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+  .msg-group { display: flex; gap: 0.75rem; margin-top: 0.8rem; }
+  .msg-group.own { flex-direction: row-reverse; }
+  .msg-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 1rem; flex-shrink: 0; align-self: flex-end; }
+  .msg-content { max-width: 70%; display: flex; flex-direction: column; gap: 3px; }
+  .msg-group.own .msg-content { align-items: flex-end; }
+  .msg-sender { font-size: 0.73rem; color: var(--text2); padding: 0 0.5rem; }
+  .msg-bubble { background: var(--bg3); border-radius: 14px 14px 14px 4px; padding: 0.6rem 0.85rem;
+    font-size: 0.88rem; line-height: 1.5; word-break: break-word; }
+  .msg-group.own .msg-bubble { background: var(--accent); border-radius: 14px 14px 4px 14px; }
+  .msg-time { font-size: 0.68rem; color: var(--text3); padding: 0 0.5rem; }
+  .date-divider { text-align: center; font-size: 0.72rem; color: var(--text3); margin: 1rem 0;
+    display: flex; align-items: center; gap: 0.8rem; }
+  .date-divider::before, .date-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .typing-indicator { display: flex; align-items: center; gap: 6px; padding: 0.6rem 0.85rem;
+    background: var(--bg3); border-radius: 14px; width: fit-content; }
+  .typing-indicator span { width: 6px; height: 6px; background: var(--text2); border-radius: 50%; animation: bounce 1.2s infinite; }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+  /* Input */
+  .chat-input-area { padding: 0.8rem 1.2rem; background: var(--bg2); border-top: 1px solid var(--border);
+    display: flex; align-items: flex-end; gap: 0.75rem; flex-shrink: 0; }
+  .input-wrap { flex: 1; background: var(--bg3); border: 1px solid var(--border2); border-radius: 14px;
+    display: flex; align-items: flex-end; gap: 0.5rem; padding: 0.6rem 0.8rem; }
+  .input-wrap:focus-within { border-color: var(--accent); }
+  #msg-input { flex: 1; background: none; border: none; color: var(--text); font-size: 0.9rem;
+    outline: none; resize: none; max-height: 120px; line-height: 1.5; font-family: inherit; }
+  .input-actions { display: flex; gap: 0.3rem; }
+  .send-btn { width: 38px; height: 38px; background: var(--accent); border: none; border-radius: 10px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all 0.2s; color: #fff; }
+  .send-btn:hover { background: var(--accent2); transform: scale(1.05); }
+  .emoji-picker-wrap { position: relative; }
+  .emoji-picker { position: absolute; bottom: 3rem; left: 0; background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--r2); padding: 0.75rem; display: none; grid-template-columns: repeat(8, 1fr);
+    gap: 4px; z-index: 100; width: 260px; }
+  .emoji-picker.open { display: grid; }
+  .emoji-picker span { font-size: 1.2rem; cursor: pointer; padding: 4px; border-radius: 6px; text-align: center; transition: background 0.1s; }
+  .emoji-picker span:hover { background: var(--bg3); }
+
+  /* Welcome */
+  .welcome-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; color: var(--text2); }
+  .welcome-area .big-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+  .welcome-area h3 { color: var(--text); font-size: 1.1rem; }
+
+  /* Right panel */
+  .right-panel { width: 280px; background: var(--bg2); border-left: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; }
+  .right-panel.closed { display: none; }
+  .panel-sec { padding: 1rem; border-bottom: 1px solid var(--border); }
+  .panel-sec h4 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 0.75rem; }
+  .member-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0; }
+  .member-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 0.85rem; position: relative; }
+  .online-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); position: absolute; bottom: 0; right: 0; border: 1.5px solid var(--bg2); }
+  .offline-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); position: absolute; bottom: 0; right: 0; border: 1.5px solid var(--bg2); }
+  .member-name { font-size: 0.85rem; }
+  .member-role { font-size: 0.7rem; color: var(--text2); }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200;
+    display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.hidden { display: none; }
+  .modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r2);
+    padding: 2rem; width: 420px; max-height: 80vh; overflow-y: auto; }
+  .modal h3 { margin-bottom: 1.5rem; font-size: 1.1rem; }
+  .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; justify-content: flex-end; }
+  .btn-secondary { background: none; border: 1px solid var(--border2); color: var(--text); border-radius: 8px;
+    padding: 0.6rem 1.2rem; cursor: pointer; font-size: 0.88rem; transition: all 0.2s; }
+  .btn-secondary:hover { background: var(--bg3); }
+  .color-picks { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.5rem; }
+  .color-pick { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: border 0.15s; }
+  .color-pick.selected { border-color: #fff; }
+
+  /* Call overlay */
+  .call-overlay { position: fixed; inset: 0; background: rgba(10,10,16,0.97); z-index: 300;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
+  .call-overlay.hidden { display: none; }
+  .call-avatar-big { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 2.8rem; border: 3px solid var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(124,111,205,0.4)} 50%{box-shadow:0 0 0 20px rgba(124,111,205,0)} }
+  .call-name { font-size: 1.4rem; font-weight: 600; }
+  .call-status { font-size: 0.85rem; color: var(--text2); }
+  .call-timer { font-size: 1rem; color: var(--accent2); font-variant-numeric: tabular-nums; }
+  .call-controls { display: flex; gap: 1rem; margin-top: 1rem; }
+  .call-ctrl { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 1.3rem; cursor: pointer; border: none; transition: all 0.2s; }
+  .call-ctrl:hover { transform: scale(1.1); }
+  .call-ctrl.end { background: var(--red); color: #fff; }
+  .call-ctrl.mute { background: var(--bg3); color: var(--text); }
+  .call-ctrl.mute.active { background: var(--yellow); color: #000; }
+  .call-ctrl.speaker { background: var(--bg3); color: var(--text); }
+  .video-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 70%; max-width: 800px; }
+  .video-box { background: var(--bg3); border-radius: var(--r2); aspect-ratio: 16/9; display: flex;
+    align-items: center; justify-content: center; flex-direction: column; gap: 0.5rem; font-size: 2rem;
+    border: 1px solid var(--border2); position: relative; overflow: hidden; }
+  .video-box video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .video-label { position: absolute; bottom: 0.6rem; left: 0.8rem; font-size: 0.75rem;
+    background: rgba(0,0,0,0.6); padding: 2px 8px; border-radius: 6px; z-index: 1; }
+  .rtc-notice { font-size: 0.75rem; color: var(--text3); text-align: center; max-width: 400px; }
+
+  /* Profile panel */
+  .profile-panel { position: fixed; right: 0; top: 54px; width: 320px; height: calc(100vh - 54px);
+    background: var(--bg2); border-left: 1px solid var(--border2); z-index: 150; transform: translateX(100%);
+    transition: transform 0.3s ease; padding: 1.5rem; overflow-y: auto; }
+  .profile-panel.open { transform: translateX(0); }
+  .profile-header { text-align: center; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  .profile-av-big { width: 70px; height: 70px; border-radius: 50%; margin: 0 auto 0.75rem; display: flex;
+    align-items: center; justify-content: center; font-size: 2rem; border: 3px solid var(--accent); }
+  .profile-name { font-size: 1.1rem; font-weight: 600; }
+  .status-select { background: var(--bg3); border: 1px solid var(--border2); color: var(--text);
+    border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.8rem; outline: none; margin-top: 6px; }
+
+  /* DM Modal */
+  .dm-user-pick { display: flex; flex-direction: column; gap: 0.5rem; max-height: 300px; overflow-y: auto; }
+  .dm-user-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem; border-radius: var(--r);
+    cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
+  .dm-user-item:hover { background: var(--bg3); border-color: var(--border2); }
+  .dm-user-item.selected { background: var(--accent-dim); border-color: var(--accent); }
+
+  /* Toast */
+  .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 500; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+  .toast { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); padding: 0.75rem 1rem;
+    font-size: 0.85rem; min-width: 240px; animation: slideIn 0.3s ease; pointer-events: all;
+    display: flex; align-items: center; gap: 0.5rem; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .toast.removing { animation: slideOut 0.3s ease forwards; }
+  @keyframes slideOut { to { transform: translateX(100%); opacity: 0; } }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  .sidebar-toggle { display: none; }
+  @media(max-width: 900px) { .right-panel { display: none; } .sidebar { width: 220px; } }
+  @media(max-width: 650px) {
+    .sidebar { position: fixed; left: -260px; top: 54px; height: calc(100vh - 54px); z-index: 100; transition: left 0.3s; }
+    .sidebar.open { left: 0; }
+    .sidebar-toggle { display: flex; }
+  }
+</style>
 </head>
 <body>
-    hello
+
+<!-- ══ AUTH SCREEN ══ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">🌌 NovaTalk</div>
+    <div class="auth-sub">แชทและโทรหากันได้ทันที</div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">เข้าสู่ระบบ</div>
+      <div class="auth-tab" onclick="switchTab('register')">สมัครสมาชิก</div>
+    </div>
+    <!-- Login -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>ชื่อผู้ใช้หรืออีเมล</label>
+        <input type="text" id="login-user" placeholder="เช่น demo" value="demo">
+      </div>
+      <div class="form-group">
+        <label>รหัสผ่าน</label>
+        <input type="password" id="login-pass" placeholder="รหัสผ่าน" value="1234"
+          onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="auth-error" id="login-err"></div>
+      <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ →</button>
+      <p style="font-size:0.78rem;color:var(--text3);margin-top:0.75rem;text-align:center">
+        Demo: <b style="color:var(--text2)">demo</b> / <b style="color:var(--text2)">1234</b>
+      </p>
+    </div>
+    <!-- Register -->
+    <div id="register-form" style="display:none">
+      <div class="form-group">
+        <label>ชื่อที่แสดง</label>
+        <input type="text" id="reg-name" placeholder="ชื่อของคุณ">
+      </div>
+      <div class="form-group">
+        <label>ชื่อผู้ใช้</label>
+        <input type="text" id="reg-user" placeholder="username (ไม่มีช่องว่าง)">
+      </div>
+      <div class="form-group">
+        <label>อีเมล</label>
+        <input type="email" id="reg-email" placeholder="email@example.com">
+      </div>
+      <div class="form-group">
+        <label>รหัสผ่าน</label>
+        <input type="password" id="reg-pass" placeholder="อย่างน้อย 4 ตัวอักษร">
+      </div>
+      <div class="form-group">
+        <label>เลือก Avatar</label>
+        <div class="avatar-pick" id="avatar-pick">
+          <span onclick="pickAv(this,'🐱')" class="selected" style="background:#2a1a3e">🐱</span>
+          <span onclick="pickAv(this,'🐶')" style="background:#1a2a2e">🐶</span>
+          <span onclick="pickAv(this,'🦊')" style="background:#2e1a0a">🦊</span>
+          <span onclick="pickAv(this,'🐼')" style="background:#1e2a1e">🐼</span>
+          <span onclick="pickAv(this,'🦋')" style="background:#1a1a3e">🦋</span>
+          <span onclick="pickAv(this,'🌟')" style="background:#2a2a0a">🌟</span>
+          <span onclick="pickAv(this,'🎮')" style="background:#0a1a2e">🎮</span>
+          <span onclick="pickAv(this,'🚀')" style="background:#1a2a1a">🚀</span>
+        </div>
+      </div>
+      <div class="auth-error" id="reg-err"></div>
+      <button class="btn-primary" onclick="doRegister()">สร้างบัญชี →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div id="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <button class="icon-btn sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-logo">🌌 NovaTalk</div>
+    <div class="topbar-search">
+      <input type="text" placeholder="ค้นหาห้อง..." oninput="searchRooms(this.value)">
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="openModal('create-room-modal')" title="สร้างห้องใหม่">＋</button>
+      <button class="icon-btn" onclick="openModal('dm-modal')" title="DM ส่วนตัว">💬</button>
+      <button class="icon-btn" onclick="toggleRightPanel()" title="สมาชิก">👥</button>
+      <div class="user-avatar" id="user-avatar-btn" onclick="toggleProfile()"></div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div style="overflow-y:auto;flex:1;display:flex;flex-direction:column">
+        <div class="sidebar-sec">
+          ห้องสนทนา
+          <button onclick="openModal('create-room-modal')" title="สร้างห้อง">＋</button>
+        </div>
+        <div class="room-list" id="room-list"></div>
+        <div class="sidebar-sec">
+          DM — ส่วนตัว
+          <button onclick="openModal('dm-modal')" title="DM ใหม่">＋</button>
+        </div>
+        <div class="room-list" id="dm-list"></div>
+      </div>
+      <div style="padding:0.75rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:0.6rem">
+        <div id="sidebar-av" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem"></div>
+        <div style="flex:1;min-width:0">
+          <div id="sidebar-name" style="font-size:0.85rem;font-weight:500"></div>
+          <div id="sidebar-status-label" style="font-size:0.72rem;color:var(--green)">● ออนไลน์</div>
+        </div>
+        <button class="icon-btn" onclick="doLogout()" title="ออกจากระบบ" style="font-size:0.85rem">⏻</button>
+      </div>
+    </div>
+
+    <!-- CHAT AREA -->
+    <div class="chat-area" id="chat-area">
+      <div class="welcome-area" id="welcome-area">
+        <div class="big-icon">💬</div>
+        <h3>เลือกห้องสนทนา</h3>
+        <p style="font-size:0.85rem">หรือสร้างห้องใหม่เพื่อเริ่มต้น</p>
+        <button class="btn-primary" style="width:auto;margin-top:0.5rem" onclick="openModal('create-room-modal')">+ สร้างห้องแชท</button>
+      </div>
+      <div id="chat-main" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+        <div class="chat-header">
+          <div id="active-room-icon" style="font-size:1.3rem"></div>
+          <div class="chat-header-info">
+            <div class="chat-header-name" id="active-room-name"></div>
+            <div class="chat-header-sub" id="active-room-sub"></div>
+          </div>
+          <div class="chat-header-actions">
+            <button class="call-btn voice" onclick="startCall('voice')">📞 โทร</button>
+            <button class="call-btn video" onclick="startCall('video')">📹 วิดีโอ</button>
+            <button class="icon-btn" onclick="toggleRightPanel()">⚙️</button>
+          </div>
+        </div>
+        <div class="messages" id="messages"></div>
+        <div class="chat-input-area">
+          <div class="input-wrap">
+            <div class="emoji-picker-wrap">
+              <button class="icon-btn" onclick="toggleEmoji()" style="padding:0.3rem">😊</button>
+              <div class="emoji-picker" id="emoji-picker"></div>
+            </div>
+            <textarea id="msg-input" rows="1" placeholder="พิมพ์ข้อความ... (Enter ส่ง, Shift+Enter ขึ้นบรรทัด)"
+              onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+            <div class="input-actions">
+              <button class="icon-btn" onclick="attachFile()" title="แนบไฟล์" style="padding:0.3rem">📎</button>
+            </div>
+          </div>
+          <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel" id="right-panel">
+      <div class="panel-sec">
+        <h4>สมาชิกในห้อง</h4>
+        <div id="panel-members"></div>
+      </div>
+      <div class="panel-sec">
+        <h4>เกี่ยวกับห้อง</h4>
+        <div id="panel-room-info" style="font-size:0.82rem;color:var(--text2)">เลือกห้องเพื่อดูข้อมูล</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE PANEL -->
+<div class="profile-panel" id="profile-panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <h3 style="font-size:1rem">โปรไฟล์ของฉัน</h3>
+    <button class="icon-btn" onclick="toggleProfile()">✕</button>
+  </div>
+  <div class="profile-header">
+    <div class="profile-av-big" id="profile-av-big"></div>
+    <div class="profile-name" id="profile-name"></div>
+    <div style="margin-top:6px">
+      <select class="status-select" id="status-select" onchange="changeStatus(this.value)">
+        <option value="online">🟢 ออนไลน์</option>
+        <option value="busy">🟡 ยุ่งอยู่</option>
+        <option value="away">🟠 ไม่อยู่</option>
+        <option value="dnd">🔴 ห้ามรบกวน</option>
+      </select>
+    </div>
+  </div>
+  <div style="margin-top:1.5rem;display:flex;flex-direction:column;gap:1rem">
+    <div class="form-group">
+      <label>ชื่อที่แสดง</label>
+      <input type="text" id="edit-display-name">
+    </div>
+    <div class="form-group">
+      <label>เกี่ยวกับฉัน</label>
+      <textarea id="edit-bio" rows="3" placeholder="บอกอะไรเกี่ยวกับตัวเอง..." style="resize:none"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Avatar</label>
+      <div class="avatar-pick" id="profile-avatar-pick">
+        <span onclick="pickProfileAv(this,'🐱')" style="background:#2a1a3e">🐱</span>
+        <span onclick="pickProfileAv(this,'🐶')" style="background:#1a2a2e">🐶</span>
+        <span onclick="pickProfileAv(this,'🦊')" style="background:#2e1a0a">🦊</span>
+        <span onclick="pickProfileAv(this,'🐼')" style="background:#1e2a1e">🐼</span>
+        <span onclick="pickProfileAv(this,'🦋')" style="background:#1a1a3e">🦋</span>
+        <span onclick="pickProfileAv(this,'🌟')" style="background:#2a2a0a">🌟</span>
+        <span onclick="pickProfileAv(this,'🎮')" style="background:#0a1a2e">🎮</span>
+        <span onclick="pickProfileAv(this,'🚀')" style="background:#1a2a1a">🚀</span>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveProfile()">💾 บันทึกโปรไฟล์</button>
+    <button class="btn-secondary" style="width:100%" onclick="doLogout()">⏻ ออกจากระบบ</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- CREATE ROOM MODAL -->
+<div class="modal-overlay hidden" id="create-room-modal">
+  <div class="modal">
+    <h3>➕ สร้างห้องสนทนาใหม่</h3>
+    <div class="form-group">
+      <label>ชื่อห้อง</label>
+      <input type="text" id="new-room-name" placeholder="เช่น ทีมพัฒนา, ประชุม Q1...">
+    </div>
+    <div class="form-group">
+      <label>คำอธิบาย</label>
+      <input type="text" id="new-room-desc" placeholder="อธิบายห้องสนทนา (ไม่บังคับ)">
+    </div>
+    <div class="form-group">
+      <label>ไอคอนห้อง</label>
+      <div class="avatar-pick" id="room-icon-pick">
+        <span onclick="pickRoomIcon(this,'💼')" class="selected" style="background:#0a1a2e;width:36px;height:36px">💼</span>
+        <span onclick="pickRoomIcon(this,'🎯')" style="background:#1a0a2e;width:36px;height:36px">🎯</span>
+        <span onclick="pickRoomIcon(this,'🎨')" style="background:#2e0a0a;width:36px;height:36px">🎨</span>
+        <span onclick="pickRoomIcon(this,'💡')" style="background:#2e2a0a;width:36px;height:36px">💡</span>
+        <span onclick="pickRoomIcon(this,'🚀')" style="background:#0a2e1a;width:36px;height:36px">🚀</span>
+        <span onclick="pickRoomIcon(this,'🎮')" style="background:#0a0a2e;width:36px;height:36px">🎮</span>
+        <span onclick="pickRoomIcon(this,'📚')" style="background:#1a2e0a;width:36px;height:36px">📚</span>
+        <span onclick="pickRoomIcon(this,'🌍')" style="background:#0a2e2e;width:36px;height:36px">🌍</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>ประเภทห้อง</label>
+      <div style="display:flex;gap:0.75rem;margin-top:0.3rem">
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.85rem;text-transform:none;letter-spacing:0">
+          <input type="radio" name="room-type" value="public" checked> 🌐 สาธารณะ (ทุกคนเข้าได้)
+        </label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.85rem;text-transform:none;letter-spacing:0">
+          <input type="radio" name="room-type" value="private"> 🔒 ส่วนตัว
+        </label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('create-room-modal')">ยกเลิก</button>
+      <button class="btn-primary" style="width:auto" onclick="createRoom()">สร้างห้อง</button>
+    </div>
+  </div>
+</div>
+
+<!-- DM MODAL -->
+<div class="modal-overlay hidden" id="dm-modal">
+  <div class="modal">
+    <h3>💬 ส่งข้อความส่วนตัว</h3>
+    <p style="font-size:0.83rem;color:var(--text2);margin-bottom:1rem">เลือกผู้ใช้ที่ต้องการแชทด้วย</p>
+    <div class="dm-user-pick" id="dm-user-list"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('dm-modal')">ยกเลิก</button>
+      <button class="btn-primary" style="width:auto" onclick="startDM()">เริ่ม DM</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALL OVERLAY -->
+<div class="call-overlay hidden" id="call-overlay">
+  <div id="call-video-grid" class="video-grid" style="display:none">
+    <div class="video-box">
+      <video id="local-video" autoplay muted playsinline></video>
+      <div id="call-my-av" style="font-size:2rem;opacity:0.5"></div>
+      <div class="video-label" id="call-my-name"></div>
+    </div>
+    <div class="video-box">
+      <video id="remote-video" autoplay playsinline></video>
+      <div style="font-size:2rem;opacity:0.4" id="remote-av-placeholder">🎭</div>
+      <div class="video-label" id="call-their-name"></div>
+    </div>
+  </div>
+  <div id="call-voice-ui" style="display:flex;flex-direction:column;align-items:center;gap:0.75rem">
+    <div class="call-avatar-big" id="call-big-av"></div>
+    <div class="call-name" id="call-display-name"></div>
+    <div class="call-status" id="call-status-text">กำลังโทร...</div>
+    <div class="call-timer" id="call-timer" style="display:none">00:00</div>
+  </div>
+  <div class="call-controls">
+    <button class="call-ctrl mute" id="mute-btn" onclick="toggleMute()" title="ปิด/เปิดไมค์">🎙️</button>
+    <button class="call-ctrl end" onclick="endCall()" title="วางสาย">📵</button>
+    <button class="call-ctrl speaker" id="speaker-btn" onclick="toggleSpeaker()" title="ลำโพง">🔊</button>
+    <button class="call-ctrl mute" id="cam-btn" onclick="toggleCam()" style="display:none" title="กล้อง">📷</button>
+  </div>
+  <div class="rtc-notice" id="rtc-notice"></div>
+</div>
+
+<input type="file" id="file-input" style="display:none" accept="image/*,.pdf,.doc,.docx,.txt" onchange="handleFileAttach(event)">
+
+<script>
+// ════════════════════════════════════════
+// DATABASE (localStorage — persistent)
+// ════════════════════════════════════════
+const DB = {
+  get(k) { try { return JSON.parse(localStorage.getItem('nt_'+k)); } catch(e) { return null; } },
+  set(k,v) { localStorage.setItem('nt_'+k, JSON.stringify(v)); },
+  del(k) { localStorage.removeItem('nt_'+k); }
+};
+
+function initDB() {
+  if (!DB.get('users')) {
+    DB.set('users', [
+      { id:'u1', username:'demo', password:'1234', displayName:'Demo User', email:'demo@example.com',
+        avatar:'🐱', bio:'นี่คือบัญชีทดสอบครับ', status:'online', color:'#2a1a3e', createdAt: Date.now() },
+      { id:'u2', username:'alice', password:'1234', displayName:'Alice', email:'alice@example.com',
+        avatar:'🦋', bio:'ยินดีต้อนรับ!', status:'online', color:'#1a1a3e', createdAt: Date.now() },
+      { id:'u3', username:'bob', password:'1234', displayName:'Bob', email:'bob@example.com',
+        avatar:'🐶', bio:'', status:'away', color:'#1a2a2e', createdAt: Date.now() },
+    ]);
+  }
+  if (!DB.get('rooms')) {
+    DB.set('rooms', [
+      { id:'r1', name:'ทั่วไป', icon:'💬', desc:'ห้องสนทนาทั่วไปสำหรับทุกคน', type:'public',
+        members:['u1','u2','u3'], createdBy:'u1', createdAt: Date.now()-100000 },
+      { id:'r2', name:'ทีมพัฒนา', icon:'💻', desc:'คุยเรื่องโปรเจคและโค้ด', type:'private',
+        members:['u1','u2'], createdBy:'u1', createdAt: Date.now()-80000 },
+      { id:'r3', name:'การตลาด', icon:'📢', desc:'แผนการตลาดและแคมเปญ', type:'public',
+        members:['u1','u3'], createdBy:'u3', createdAt: Date.now()-60000 },
+    ]);
+  }
+  if (!DB.get('messages')) {
+    const now = Date.now();
+    DB.set('messages', [
+      { id:'m1', roomId:'r1', userId:'u2', text:'สวัสดีทุกคน! 👋', timestamp: now-7200000, read:['u1','u2','u3'] },
+      { id:'m2', roomId:'r1', userId:'u3', text:'สวัสดีครับ วันนี้เป็นยังไงบ้าง?', timestamp: now-7100000, read:['u1','u2','u3'] },
+      { id:'m3', roomId:'r1', userId:'u1', text:'ดีมากเลย! กำลังทดสอบแอพใหม่อยู่ครับ 🚀', timestamp: now-7000000, read:['u1','u2','u3'] },
+      { id:'m4', roomId:'r2', userId:'u2', text:'ไฟล์ดีไซน์ใหม่อัปโหลดแล้วนะคะ ดูได้เลย', timestamp: now-3600000, read:['u1','u2'] },
+      { id:'m5', roomId:'r2', userId:'u1', text:'โอเค จะดูตอนเย็นนี้เลยครับ ขอบคุณ!', timestamp: now-3500000, read:['u1','u2'] },
+      { id:'m6', roomId:'r3', userId:'u3', text:'ประชุมพรุ่งนี้ 10 โมงเช้าครับ ใครว่างบ้าง?', timestamp: now-1800000, read:['u3'] },
+    ]);
+  }
+  if (!DB.get('dms')) DB.set('dms', []);
+}
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let currentUser = null;
+let activeRoomId = null;
+let activeDMId = null;
+let selectedAvatar = '🐱';
+let selectedRoomIcon = '💼';
+let selectedDMUserId = null;
+let rightPanelOpen = true;
+let callInterval = null;
+let callSeconds = 0;
+let mutedCall = false;
+let speakerOff = false;
+let camOff = false;
+let currentCallType = null;
+let localStream = null;
+
+const EMOJIS = ['😊','😂','❤️','👍','🎉','🔥','😎','🤔','👏','🙏','💪','🎯','✨','🌟','💡',
+  '🚀','🎮','🎨','📚','🌍','😅','🤣','😍','🥰','😭','😱','🤩','🥳','😴','🤓','💬','📢',
+  '🔔','✅','❌','⭐','💯','🏆','🎁','🌈'];
+
+initDB();
+
+// ════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) =>
+    t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('login-form').style.display = tab==='login'?'block':'none';
+  document.getElementById('register-form').style.display = tab==='register'?'block':'none';
+}
+
+function pickAv(el, emoji) {
+  document.querySelectorAll('#avatar-pick span').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAvatar = emoji;
+}
+
+function doLogin() {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  errEl.textContent = '';
+  if (!username || !password) { errEl.textContent = 'กรุณากรอกข้อมูลให้ครบ'; return; }
+  const users = DB.get('users') || [];
+  const user = users.find(u => (u.username===username||u.email===username) && u.password===password);
+  if (!user) { errEl.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'; return; }
+  user.status = 'online';
+  DB.set('users', users);
+  DB.set('session', user.id);
+  currentUser = user;
+  launchApp();
+}
+
+function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const username = document.getElementById('reg-user').value.trim().toLowerCase().replace(/\s/g,'');
+  const email = document.getElementById('reg-email').value.trim().toLowerCase();
+  const password = document.getElementById('reg-pass').value;
+  const errEl = document.getElementById('reg-err');
+  errEl.textContent = '';
+  if (!name||!username||!email||!password) { errEl.textContent = 'กรุณากรอกข้อมูลให้ครบ'; return; }
+  if (password.length < 4) { errEl.textContent = 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร'; return; }
+  if (!/^[a-z0-9_]+$/.test(username)) { errEl.textContent = 'ชื่อผู้ใช้ใช้ได้เฉพาะ a-z, 0-9, _ เท่านั้น'; return; }
+  const users = DB.get('users') || [];
+  if (users.find(u => u.username===username)) { errEl.textContent = 'ชื่อผู้ใช้นี้มีคนใช้แล้ว'; return; }
+  if (users.find(u => u.email===email)) { errEl.textContent = 'อีเมลนี้มีคนใช้แล้ว'; return; }
+  const colors = ['#2a1a3e','#1a2a2e','#2e1a0a','#1e2a1e','#1a1a3e','#2a2a0a','#0a1a2e','#1a2a1a'];
+  const newUser = {
+    id: 'u'+Date.now(), username, password, displayName: name, email,
+    avatar: selectedAvatar, bio: '', status: 'online',
+    color: colors[Math.floor(Math.random()*colors.length)], createdAt: Date.now()
+  };
+  users.push(newUser);
+  // Auto-join all public rooms
+  const rooms = DB.get('rooms') || [];
+  rooms.filter(r => r.type==='public').forEach(r => { if (!r.members.includes(newUser.id)) r.members.push(newUser.id); });
+  DB.set('rooms', rooms);
+  DB.set('users', users);
+  DB.set('session', newUser.id);
+  currentUser = newUser;
+  launchApp();
+}
+
+function doLogout() {
+  if (localStream) { localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
+  const users = DB.get('users') || [];
+  const idx = users.findIndex(u => u.id===currentUser.id);
+  if (idx!==-1) { users[idx].status='offline'; DB.set('users',users); }
+  DB.del('session');
+  currentUser = null; activeRoomId = null; activeDMId = null;
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('profile-panel').classList.remove('open');
+  document.getElementById('call-overlay').classList.add('hidden');
+  if (callInterval) { clearInterval(callInterval); callInterval=null; }
+}
+
+// ════════════════════════════════════════
+// APP LAUNCH
+// ════════════════════════════════════════
+function launchApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  updateSidebarUser();
+  renderRoomList();
+  renderDMList();
+  renderEmojiPicker();
+  showToast('👋', `ยินดีต้อนรับ ${currentUser.displayName}!`);
+}
+
+function updateSidebarUser() {
+  const av = document.getElementById('sidebar-av');
+  av.textContent = currentUser.avatar;
+  av.style.background = currentUser.color||'#2a1a3e';
+  document.getElementById('sidebar-name').textContent = currentUser.displayName;
+  const statusEl = document.getElementById('sidebar-status-label');
+  const colors = {online:'var(--green)',busy:'var(--yellow)',away:'var(--yellow)',dnd:'var(--red)',offline:'var(--text3)'};
+  statusEl.style.color = colors[currentUser.status]||'var(--text3)';
+  statusEl.textContent = statusLabel(currentUser.status);
+  const btn = document.getElementById('user-avatar-btn');
+  btn.textContent = currentUser.avatar;
+  btn.style.background = currentUser.color||'#2a1a3e';
+  document.getElementById('profile-av-big').textContent = currentUser.avatar;
+  document.getElementById('profile-av-big').style.background = currentUser.color||'#2a1a3e';
+  document.getElementById('profile-name').textContent = currentUser.displayName;
+  document.getElementById('edit-display-name').value = currentUser.displayName;
+  document.getElementById('edit-bio').value = currentUser.bio||'';
+  document.getElementById('status-select').value = currentUser.status||'online';
+}
+
+function restoreSession() {
+  initDB();
+  const sid = DB.get('session');
+  if (sid) {
+    const users = DB.get('users')||[];
+    currentUser = users.find(u=>u.id===sid);
+    if (currentUser) { launchApp(); return; }
+  }
+}
+
+// ════════════════════════════════════════
+// ROOMS
+// ════════════════════════════════════════
+function renderRoomList(filter='') {
+  const rooms = DB.get('rooms')||[];
+  const messages = DB.get('messages')||[];
+  const myRooms = rooms.filter(r => r.members.includes(currentUser.id) &&
+    (!filter || r.name.toLowerCase().includes(filter.toLowerCase()) || (r.desc||'').toLowerCase().includes(filter.toLowerCase())));
+  const el = document.getElementById('room-list');
+  el.innerHTML = '';
+  myRooms.forEach(room => {
+    const lastMsg = messages.filter(m=>m.roomId===room.id).sort((a,b)=>b.timestamp-a.timestamp)[0];
+    const unread = messages.filter(m=>m.roomId===room.id && !(m.read||[]).includes(currentUser.id) && m.userId!==currentUser.id).length;
+    const users = DB.get('users')||[];
+    const sender = lastMsg ? users.find(u=>u.id===lastMsg.userId) : null;
+    const div = document.createElement('div');
+    div.className = 'room-item'+(room.id===activeRoomId?' active':'');
+    div.onclick = () => openRoom(room.id);
+    div.innerHTML = `
+      <div class="room-icon" style="background:var(--bg3)">${room.icon}</div>
+      <div class="room-info">
+        <div class="room-name">${escHtml(room.name)}</div>
+        <div class="room-last">${lastMsg?(sender?.displayName?.split(' ')[0]||'?')+': '+escHtml(lastMsg.text):room.desc||'ยังไม่มีข้อความ'}</div>
+      </div>
+      <div class="room-meta">
+        <div class="room-time">${lastMsg?formatTime(lastMsg.timestamp):''}</div>
+        ${unread>0?`<div class="unread-badge">${unread}</div>`:''}
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+function renderDMList() {
+  const dms = DB.get('dms')||[];
+  const users = DB.get('users')||[];
+  const messages = DB.get('messages')||[];
+  const el = document.getElementById('dm-list');
+  el.innerHTML = '';
+  const myDMs = dms.filter(d => d.members.includes(currentUser.id));
+  myDMs.forEach(dm => {
+    const otherId = dm.members.find(id=>id!==currentUser.id);
+    const other = users.find(u=>u.id===otherId)||{displayName:'ผู้ใช้',avatar:'❓',color:'#1a1a3e',status:'offline'};
+    const lastMsg = messages.filter(m=>m.roomId===dm.id).sort((a,b)=>b.timestamp-a.timestamp)[0];
+    const unread = messages.filter(m=>m.roomId===dm.id && !(m.read||[]).includes(currentUser.id) && m.userId!==currentUser.id).length;
+    const div = document.createElement('div');
+    div.className = 'room-item'+(dm.id===activeRoomId?' active':'');
+    div.onclick = () => openRoom(dm.id);
+    div.innerHTML = `
+      <div class="member-av" style="width:36px;height:36px;font-size:1.1rem;background:${other.color||'#1a1a3e'};border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0">
+        ${other.avatar}
+        <div class="${other.status==='online'?'online-dot':'offline-dot'}"></div>
+      </div>
+      <div class="room-info">
+        <div class="room-name">${escHtml(other.displayName)}</div>
+        <div class="room-last">${lastMsg?escHtml(lastMsg.text):'ส่งข้อความได้เลย!'}</div>
+      </div>
+      <div class="room-meta">
+        ${lastMsg?`<div class="room-time">${formatTime(lastMsg.timestamp)}</div>`:''}
+        ${unread>0?`<div class="unread-badge">${unread}</div>`:''}
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+function statusLabel(s) {
+  return {online:'● ออนไลน์',busy:'● ยุ่งอยู่',away:'○ ไม่อยู่',offline:'○ ออฟไลน์',dnd:'⊗ ห้ามรบกวน'}[s]||'○ ออฟไลน์';
+}
+
+function openRoom(roomId) {
+  activeRoomId = roomId;
+  // Check rooms first, then DMs
+  const rooms = DB.get('rooms')||[];
+  const dms = DB.get('dms')||[];
+  const allRooms = [...rooms, ...dms];
+  const room = allRooms.find(r=>r.id===roomId);
+  if (!room) return;
+  document.getElementById('welcome-area').style.display = 'none';
+  const chatMain = document.getElementById('chat-main');
+  chatMain.style.display = 'flex';
+  // Room or DM label
+  let icon = room.icon||'💬', name = room.name, sub = room.desc||'';
+  if (room.isDM) {
+    const users = DB.get('users')||[];
+    const otherId = room.members.find(id=>id!==currentUser.id);
+    const other = users.find(u=>u.id===otherId)||{displayName:'ผู้ใช้',avatar:'💬',status:'offline'};
+    icon = other.avatar;
+    name = other.displayName;
+    sub = statusLabel(other.status);
+  } else {
+    sub = sub || `${room.members.length} สมาชิก • ${room.type==='public'?'🌐 สาธารณะ':'🔒 ส่วนตัว'}`;
+  }
+  document.getElementById('active-room-icon').textContent = icon;
+  document.getElementById('active-room-name').textContent = name;
+  document.getElementById('active-room-sub').textContent = sub;
+  markRead(roomId);
+  renderMessages(roomId);
+  renderRoomList();
+  renderDMList();
+  renderPanelMembers(room);
+  document.getElementById('msg-input').focus();
+  if (window.innerWidth <= 650) document.getElementById('sidebar').classList.remove('open');
+}
+
+function markRead(roomId) {
+  const messages = DB.get('messages')||[];
+  let changed = false;
+  messages.forEach(m => {
+    if (m.roomId===roomId && !(m.read||[]).includes(currentUser.id)) {
+      m.read = [...(m.read||[]), currentUser.id];
+      changed = true;
+    }
+  });
+  if (changed) DB.set('messages', messages);
+}
+
+function renderMessages(roomId) {
+  const messages = (DB.get('messages')||[]).filter(m=>m.roomId===roomId).sort((a,b)=>a.timestamp-b.timestamp);
+  const users = DB.get('users')||[];
+  const el = document.getElementById('messages');
+  el.innerHTML = '';
+  let lastDate = '', lastUserId = '';
+  messages.forEach(msg => {
+    const date = formatDate(msg.timestamp);
+    if (date!==lastDate) {
+      const d = document.createElement('div');
+      d.className='date-divider'; d.textContent=date;
+      el.appendChild(d); lastDate=date;
+    }
+    const user = users.find(u=>u.id===msg.userId)||{displayName:'ผู้ใช้',avatar:'❓',color:'#1a1a3e'};
+    const isOwn = msg.userId===currentUser.id;
+    const showMeta = lastUserId!==msg.userId;
+    lastUserId = msg.userId;
+    const group = document.createElement('div');
+    group.className = 'msg-group'+(isOwn?' own':'');
+    let bubbleContent = '';
+    if (msg.file) {
+      if (msg.file.type==='image') {
+        bubbleContent = `<img src="${msg.file.data}" style="max-width:200px;border-radius:8px;display:block;margin-bottom:4px"><span style="font-size:0.75rem;opacity:0.8">${escHtml(msg.file.name)}</span>`;
+      } else {
+        bubbleContent = `📄 <b>${escHtml(msg.file.name)}</b><br><span style="font-size:0.75rem;opacity:0.8">${msg.file.size}</span>`;
+      }
+      if (msg.text) bubbleContent += `<br>${escHtml(msg.text)}`;
+    } else {
+      bubbleContent = escHtml(msg.text);
+    }
+    group.innerHTML = `
+      <div class="msg-avatar" style="background:${user.color||'#1a1a3e'};${showMeta?'':'visibility:hidden'}">${user.avatar}</div>
+      <div class="msg-content">
+        ${(!isOwn&&showMeta)?`<div class="msg-sender">${escHtml(user.displayName)}</div>`:''}
+        <div class="msg-bubble">${bubbleContent}</div>
+        <div class="msg-time">${formatClock(msg.timestamp)}${isOwn?' <span style="color:var(--accent2)">✓✓</span>':''}</div>
+      </div>`;
+    el.appendChild(group);
+  });
+  el.scrollTop = el.scrollHeight;
+}
+
+function renderPanelMembers(room) {
+  const users = DB.get('users')||[];
+  const el = document.getElementById('panel-members');
+  const info = document.getElementById('panel-room-info');
+  el.innerHTML = '';
+  room.members.forEach(mid => {
+    const u = users.find(u=>u.id===mid);
+    if (!u) return;
+    const div = document.createElement('div');
+    div.className='member-item';
+    div.innerHTML = `
+      <div class="member-av" style="background:${u.color||'#1a1a3e'}">
+        ${u.avatar}
+        <div class="${['online','busy'].includes(u.status)?'online-dot':'offline-dot'}"></div>
+      </div>
+      <div>
+        <div class="member-name">${escHtml(u.displayName)}</div>
+        <div class="member-role">${room.createdBy===u.id?'👑 เจ้าของห้อง':statusLabel(u.status)}</div>
+      </div>`;
+    el.appendChild(div);
+  });
+  if (info) {
+    if (room.isDM) {
+      info.textContent = 'ห้องสนทนาส่วนตัว';
+    } else {
+      info.innerHTML = `
+        <div>${room.icon} <b>${escHtml(room.name)}</b></div>
+        <div style="margin-top:0.4rem">${escHtml(room.desc||'ไม่มีคำอธิบาย')}</div>
+        <div style="margin-top:0.4rem;color:var(--text3)">${room.type==='public'?'🌐 สาธารณะ':'🔒 ส่วนตัว'} • สร้าง ${formatDate(room.createdAt)}</div>`;
+    }
+  }
+}
+
+function createRoom() {
+  const name = document.getElementById('new-room-name').value.trim();
+  if (!name) { showToast('⚠️','กรุณาใส่ชื่อห้อง'); return; }
+  const desc = document.getElementById('new-room-desc').value.trim();
+  const type = document.querySelector('input[name="room-type"]:checked').value;
+  const rooms = DB.get('rooms')||[];
+  const users = DB.get('users')||[];
+  const allIds = users.map(u=>u.id);
+  const newRoom = {
+    id:'r'+Date.now(), name, icon:selectedRoomIcon, desc, type,
+    members: type==='public' ? allIds : [currentUser.id],
+    createdBy:currentUser.id, createdAt:Date.now()
+  };
+  rooms.push(newRoom);
+  DB.set('rooms', rooms);
+  closeModal('create-room-modal');
+  document.getElementById('new-room-name').value='';
+  document.getElementById('new-room-desc').value='';
+  renderRoomList();
+  openRoom(newRoom.id);
+  showToast('🎉', `สร้างห้อง "${name}" แล้ว!`);
+}
+
+function searchRooms(q) {
+  renderRoomList(q);
+}
+
+// ════════════════════════════════════════
+// DM SYSTEM
+// ════════════════════════════════════════
+function openDMModal() {
+  const users = DB.get('users')||[];
+  const el = document.getElementById('dm-user-list');
+  el.innerHTML = '';
+  selectedDMUserId = null;
+  users.filter(u=>u.id!==currentUser.id).forEach(u => {
+    const div = document.createElement('div');
+    div.className='dm-user-item';
+    div.onclick = () => {
+      document.querySelectorAll('.dm-user-item').forEach(d=>d.classList.remove('selected'));
+      div.classList.add('selected');
+      selectedDMUserId = u.id;
+    };
+    div.innerHTML = `
+      <div style="width:36px;height:36px;border-radius:50%;background:${u.color||'#1a1a3e'};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;position:relative">
+        ${u.avatar}
+        <div class="${u.status==='online'?'online-dot':'offline-dot'}"></div>
+      </div>
+      <div>
+        <div style="font-size:0.88rem;font-weight:500">${escHtml(u.displayName)}</div>
+        <div style="font-size:0.75rem;color:var(--text2)">@${escHtml(u.username)} • ${statusLabel(u.status)}</div>
+      </div>`;
+    el.appendChild(div);
+  });
+  openModal('dm-modal');
+}
+
+function startDM() {
+  if (!selectedDMUserId) { showToast('⚠️','กรุณาเลือกผู้ใช้'); return; }
+  // Check if DM already exists
+  const dms = DB.get('dms')||[];
+  let dm = dms.find(d => d.members.includes(currentUser.id) && d.members.includes(selectedDMUserId));
+  if (!dm) {
+    const users = DB.get('users')||[];
+    const other = users.find(u=>u.id===selectedDMUserId);
+    dm = {
+      id: 'dm'+Date.now(), isDM: true,
+      name: other?.displayName||'DM',
+      members: [currentUser.id, selectedDMUserId],
+      createdAt: Date.now()
+    };
+    dms.push(dm);
+    DB.set('dms', dms);
+  }
+  closeModal('dm-modal');
+  renderDMList();
+  openRoom(dm.id);
+}
+
+// ════════════════════════════════════════
+// MESSAGING
+// ════════════════════════════════════════
+function sendMessage(fileObj=null) {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text && !fileObj) return;
+  if (!activeRoomId) return;
+  const messages = DB.get('messages')||[];
+  const msg = {
+    id:'msg'+Date.now(), roomId:activeRoomId, userId:currentUser.id,
+    text, timestamp:Date.now(), read:[currentUser.id]
+  };
+  if (fileObj) msg.file = fileObj;
+  messages.push(msg);
+  DB.set('messages', messages);
+  input.value=''; input.style.height='auto';
+  renderMessages(activeRoomId);
+  renderRoomList();
+  renderDMList();
+  if (!fileObj) simulateReply(text);
+}
+
+function simulateReply(userText) {
+  if (!activeRoomId) return;
+  const rooms = DB.get('rooms')||[];
+  const dms = DB.get('dms')||[];
+  const room = [...rooms,...dms].find(r=>r.id===activeRoomId);
+  if (!room) return;
+  const otherMembers = room.members.filter(id=>id!==currentUser.id);
+  if (otherMembers.length===0) return;
+  const users = DB.get('users')||[];
+  const responder = users.find(u=>u.id===otherMembers[Math.floor(Math.random()*otherMembers.length)]);
+  if (!responder) return;
+  const msgs = document.getElementById('messages');
+  const typing = document.createElement('div');
+  typing.className='msg-group'; typing.id='typing-ind';
+  typing.innerHTML = `<div class="msg-avatar" style="background:${responder.color||'#1a1a3e'}">${responder.avatar}</div>
+    <div class="msg-content"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(typing);
+  msgs.scrollTop = msgs.scrollHeight;
+  const replies = ['โอเคครับ! 👍','เข้าใจแล้วค่ะ 😊','ดีเลยนะ! 🎉','ขอบคุณมากครับ','เห็นด้วยเลย ✓',
+    'โอเค จะดูให้นะครับ','สุดยอดไปเลย! 🚀','ได้เลยค่ะ 💪','เดี๋ยวมาตอบให้นะครับ','ขอบคุณสำหรับข้อมูลนะคะ',
+    'รับทราบครับ 🙏','โอเค ฟัง! 👂','เยี่ยมมากเลย! ⭐','555 😂','จริงด้วยนะ 🤔'];
+  setTimeout(() => {
+    const ind = document.getElementById('typing-ind');
+    if (ind) ind.remove();
+    if (activeRoomId !== room.id) return;
+    const messages = DB.get('messages')||[];
+    const reply = {
+      id:'msg'+Date.now(), roomId:activeRoomId, userId:responder.id,
+      text:replies[Math.floor(Math.random()*replies.length)],
+      timestamp:Date.now(), read:[responder.id]
+    };
+    messages.push(reply);
+    DB.set('messages', messages);
+    renderMessages(activeRoomId);
+    renderRoomList();
+    renderDMList();
+  }, 1200+Math.random()*1800);
+}
+
+function handleKey(e) {
+  if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,120)+'px';
+}
+
+// File attach
+function attachFile() {
+  document.getElementById('file-input').click();
+}
+
+function handleFileAttach(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value='';
+  const maxSize = 5*1024*1024;
+  if (file.size>maxSize) { showToast('⚠️','ไฟล์ต้องไม่เกิน 5MB'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const isImage = file.type.startsWith('image/');
+    const fileObj = {
+      name: file.name,
+      size: formatFileSize(file.size),
+      type: isImage?'image':'file',
+      data: ev.target.result
+    };
+    sendMessage(fileObj);
+    showToast('📎', `แนบไฟล์ "${file.name}" แล้ว`);
+  };
+  reader.readAsDataURL(file);
+}
+
+function formatFileSize(b) {
+  if (b<1024) return b+'B';
+  if (b<1024*1024) return (b/1024).toFixed(1)+'KB';
+  return (b/1024/1024).toFixed(1)+'MB';
+}
+
+// ════════════════════════════════════════
+// EMOJI
+// ════════════════════════════════════════
+function renderEmojiPicker() {
+  const el = document.getElementById('emoji-picker');
+  el.innerHTML='';
+  EMOJIS.forEach(e => {
+    const s = document.createElement('span');
+    s.textContent=e;
+    s.onclick = () => {
+      const inp = document.getElementById('msg-input');
+      inp.value+=e; inp.focus();
+      el.classList.remove('open');
+    };
+    el.appendChild(s);
+  });
+}
+function toggleEmoji() { document.getElementById('emoji-picker').classList.toggle('open'); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('.emoji-picker-wrap')) document.getElementById('emoji-picker').classList.remove('open');
+});
+
+// ════════════════════════════════════════
+// CALL SYSTEM (WebRTC-ready)
+// ════════════════════════════════════════
+async function startCall(type) {
+  if (!activeRoomId) { showToast('⚠️','กรุณาเลือกห้องก่อนโทร'); return; }
+  currentCallType = type;
+  const rooms = DB.get('rooms')||[];
+  const dms = DB.get('dms')||[];
+  const room = [...rooms,...dms].find(r=>r.id===activeRoomId);
+  const overlay = document.getElementById('call-overlay');
+  overlay.classList.remove('hidden');
+  document.getElementById('call-display-name').textContent = room?.name||'ห้อง';
+  document.getElementById('call-big-av').textContent = room?.icon||'💬';
+  document.getElementById('call-status-text').textContent = 'กำลังเชื่อมต่อ...';
+  document.getElementById('call-timer').style.display='none';
+  document.getElementById('rtc-notice').textContent='';
+  const videoGrid = document.getElementById('call-video-grid');
+  const voiceUI = document.getElementById('call-voice-ui');
+  const camBtn = document.getElementById('cam-btn');
+  if (type==='video') {
+    videoGrid.style.display='grid';
+    voiceUI.style.display='none';
+    camBtn.style.display='flex';
+    document.getElementById('call-my-name').textContent = currentUser.displayName;
+    document.getElementById('call-their-name').textContent = room?.name||'ห้อง';
+    document.getElementById('call-my-av').textContent = currentUser.avatar;
+    // Request camera + mic
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+      const localVid = document.getElementById('local-video');
+      localVid.srcObject = localStream;
+      document.getElementById('call-my-av').style.display='none';
+      document.getElementById('rtc-notice').textContent='📹 กล้องและไมค์พร้อมแล้ว (จำลองโหมด — ต้องใช้เซิร์ฟเวอร์ Signaling สำหรับโทรจริง)';
+    } catch(err) {
+      document.getElementById('rtc-notice').textContent='⚠️ ไม่สามารถเข้าถึงกล้อง/ไมค์ได้: '+err.message;
+    }
+  } else {
+    videoGrid.style.display='none';
+    voiceUI.style.display='flex';
+    voiceUI.style.flexDirection='column';
+    voiceUI.style.alignItems='center';
+    camBtn.style.display='none';
+    // Request mic only
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio:true });
+      document.getElementById('rtc-notice').textContent='🎙️ ไมค์พร้อมแล้ว (จำลองโหมด — ต้องใช้เซิร์ฟเวอร์ Signaling สำหรับโทรจริง)';
+    } catch(err) {
+      document.getElementById('rtc-notice').textContent='⚠️ ไม่สามารถเข้าถึงไมค์ได้';
+    }
+  }
+  setTimeout(() => {
+    document.getElementById('call-status-text').textContent = type==='video'?'กำลังวิดีโอคอล':'กำลังสนทนาเสียง';
+    document.getElementById('call-timer').style.display='block';
+    callSeconds=0;
+    callInterval = setInterval(() => {
+      callSeconds++;
+      const m=String(Math.floor(callSeconds/60)).padStart(2,'0');
+      const s=String(callSeconds%60).padStart(2,'0');
+      document.getElementById('call-timer').textContent=m+':'+s;
+    }, 1000);
+  }, 1500);
+}
+
+function endCall() {
+  if (callInterval) { clearInterval(callInterval); callInterval=null; }
+  if (localStream) { localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
+  const lv=document.getElementById('local-video');
+  if (lv) lv.srcObject=null;
+  document.getElementById('call-overlay').classList.add('hidden');
+  const secs=callSeconds;
+  const m=Math.floor(secs/60), s=secs%60;
+  showToast('📵',`สิ้นสุดการโทร ${m>0?m+'น. ':''}${s}วิ`);
+  callSeconds=0; mutedCall=false; speakerOff=false; camOff=false;
+  document.getElementById('mute-btn').textContent='🎙️';
+  document.getElementById('speaker-btn').textContent='🔊';
+}
+
+function toggleMute() {
+  mutedCall=!mutedCall;
+  if (localStream) localStream.getAudioTracks().forEach(t=>t.enabled=!mutedCall);
+  const btn=document.getElementById('mute-btn');
+  btn.textContent=mutedCall?'🔇':'🎙️';
+  btn.classList.toggle('active', mutedCall);
+  showToast(mutedCall?'🔇':'🎙️', mutedCall?'ปิดไมค์แล้ว':'เปิดไมค์แล้ว');
+}
+
+function toggleSpeaker() {
+  speakerOff=!speakerOff;
+  const btn=document.getElementById('speaker-btn');
+  btn.textContent=speakerOff?'🔕':'🔊';
+  btn.classList.toggle('active', speakerOff);
+}
+
+function toggleCam() {
+  camOff=!camOff;
+  if (localStream) localStream.getVideoTracks().forEach(t=>t.enabled=!camOff);
+  const btn=document.getElementById('cam-btn');
+  btn.textContent=camOff?'📵':'📷';
+  btn.classList.toggle('active', camOff);
+  const lv=document.getElementById('local-video');
+  if (lv) lv.style.opacity=camOff?'0':'1';
+  document.getElementById('call-my-av').style.display=camOff?'block':'none';
+}
+
+// ════════════════════════════════════════
+// PROFILE
+// ════════════════════════════════════════
+function toggleProfile() {
+  document.getElementById('profile-panel').classList.toggle('open');
+}
+
+function pickProfileAv(el, emoji) {
+  document.querySelectorAll('#profile-avatar-pick span').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+  currentUser.avatar=emoji;
+  currentUser.color=el.style.background;
+}
+
+function saveProfile() {
+  const newName = document.getElementById('edit-display-name').value.trim();
+  const newBio = document.getElementById('edit-bio').value.trim();
+  if (!newName) { showToast('⚠️','ชื่อต้องไม่ว่างเปล่า'); return; }
+  currentUser.displayName=newName;
+  currentUser.bio=newBio;
+  const users=DB.get('users')||[];
+  const idx=users.findIndex(u=>u.id===currentUser.id);
+  if (idx!==-1) { users[idx]={...users[idx],...currentUser}; DB.set('users',users); }
+  updateSidebarUser();
+  renderRoomList();
+  renderDMList();
+  showToast('✅','บันทึกโปรไฟล์แล้ว!');
+  toggleProfile();
+}
+
+function changeStatus(val) {
+  currentUser.status=val;
+  const users=DB.get('users')||[];
+  const idx=users.findIndex(u=>u.id===currentUser.id);
+  if (idx!==-1) { users[idx].status=val; DB.set('users',users); }
+  updateSidebarUser();
+  renderDMList();
+  showToast('✅',`เปลี่ยนสถานะเป็น ${statusLabel(val)}`);
+}
+
+// ════════════════════════════════════════
+// UI HELPERS
+// ════════════════════════════════════════
+function openModal(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('hidden');
+  if (id==='dm-modal') openDMModal();
+}
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.add('hidden');}));
+
+function toggleRightPanel() {
+  rightPanelOpen=!rightPanelOpen;
+  document.getElementById('right-panel').classList.toggle('closed',!rightPanelOpen);
+}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function pickRoomIcon(el, icon) {
+  document.querySelectorAll('#room-icon-pick span').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedRoomIcon=icon;
+}
+
+function showToast(icon, msg) {
+  const container=document.getElementById('toasts');
+  const toast=document.createElement('div');
+  toast.className='toast';
+  toast.innerHTML=`<span style="font-size:1.1rem">${icon}</span> <span>${escHtml(String(msg))}</span>`;
+  container.appendChild(toast);
+  setTimeout(()=>{ toast.classList.add('removing'); setTimeout(()=>toast.remove(),300); },3000);
+}
+
+function formatTime(ts) {
+  const d=new Date(ts),now=new Date();
+  if (d.toDateString()===now.toDateString()) return d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short'});
+}
+function formatDate(ts) {
+  const d=new Date(ts),now=new Date();
+  if (d.toDateString()===now.toDateString()) return 'วันนี้';
+  const y=new Date(); y.setDate(y.getDate()-1);
+  if (d.toDateString()===y.toDateString()) return 'เมื่อวาน';
+  return d.toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'});
+}
+function formatClock(ts) { return new Date(ts).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); }
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Boot
+restoreSession();
+</script>
 </body>
 </html>
