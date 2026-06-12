@@ -32,19 +32,19 @@ const firebaseConfig = {
   // Your web app's Firebase configuration
   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
-    apiKey: "AIzaSyDYd7Y5YLiqiUjG-aNXZWLFUb_AnKH2x-k",
-    authDomain: "nova-526f3.firebaseapp.com",
-    databaseURL: "https://nova-526f3-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "nova-526f3",
-    storageBucket: "nova-526f3.firebasestorage.app",
-    messagingSenderId: "319708455385",
-    appId: "1:319708455385:web:c997376991a69c1be4b9c8",
-    measurementId: "G-1X8HW2SW7X"
-  };
+  apiKey: "AIzaSyDYd7Y5YLiqiUjG-aNXZWLFUb_AnKH2x-k",
+  authDomain: "nova-526f3.firebaseapp.com",
+  databaseURL: "https://nova-526f3-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "nova-526f3",
+  storageBucket: "nova-526f3.firebasestorage.app",
+  messagingSenderId: "319708455385",
+  appId: "1:319708455385:web:c997376991a69c1be4b9c8",
+  measurementId: "G-1X8HW2SW7X"
+};
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+firebase.initializeApp(firebaseConfig);
+
+const rtdb = firebase.database();
 };
 
 firebase.initializeApp(firebaseConfig);
